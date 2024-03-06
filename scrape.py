@@ -7,7 +7,6 @@ import os
 import notify
 
 
-user_email = "shess@nso.edu"
 
 def fetch(url):
     """Fetch content of the URL."""
@@ -89,7 +88,7 @@ def json_file(m):
 
 def notify_user(month):
     url = "https://www.recreation.gov/permits/250014/registration/detailed-availability?date={}".format(month_date(month))
-    notify.notify_user_via_email(user_email, month, url)
+    notify.notify_user_via_email(month, url)
 
 def main():
     print("Starting River API Scraper")
