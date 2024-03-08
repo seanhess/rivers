@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import os
 import notify
+import random
 
 
 
@@ -95,7 +96,8 @@ def main():
 
     while True:
         run_check()
-        time.sleep(5*60) # in seconds
+        random_seconds = random.randint(60, 5*60)
+        time.sleep(random_seconds) # in seconds
 
 if __name__ == "__main__":
     main()
