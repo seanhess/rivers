@@ -3,10 +3,18 @@ import hashlib
 import json
 from datetime import datetime
 import time
+from typing import Dict, TypedDict
 import os
 import notify
 import random
 
+class Availability(TypedDict):
+    total: int
+    remaining: int
+
+class DivisionAvailability(TypedDict):
+    division_id: str
+    date_availability: Dict[str, Availability]
 
 
 def fetch(url):
@@ -21,32 +29,40 @@ def fetch(url):
     return response.text
 
 
-def fetch_availability(month):
+def fetch_availability(month) -> Dict[str, DivisionAvailability]:
     url = month_availability(month)
     res = fetch(url)
     data = json.loads(res)
-    return json.dumps(data["payload"]["availability"])
+    return data["payload"]["availability"]
 
 def month_availability(month):
     date = month_date(month)
     return "https://www.recreation.gov/api/permits/250014/availability/month?start_date={}T00:00:00.000Z&commercial_acct=false&is_lottery=false".format(date)
 
-def hash(content):
+def hash(content:str) -> str:
     """Calculate MD5 hash of the given content."""
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
 def run_check_month(month):
     month_file = json_file(month)
-    old_json = ""
+    old_json_str = ""
 
     # Check if the hash file exists to compare with the previous hash
     if os.path.exists(month_file):
         with open(month_file, 'r') as file:
-            old_json = file.read()
+            old_json_str = file.read()
 
     new_json = fetch_availability(month)
-    old_hash = hash(old_json)
-    new_hash = hash(new_json)
+    new_json_str = json.dumps(new_json)
+
+
+    old_hash = hash(old_json_str)
+    new_hash = hash(new_json_str)
+
+    invalid = check_invalid(new_json)
+
+    if invalid:
+        print("Invalid Response: {} {}".format(month, invalid))
 
     if (old_hash != new_hash):
         print("DIFF", month, "old={}".format(old_hash), "new={}".format(new_hash))
@@ -54,12 +70,21 @@ def run_check_month(month):
 
         # record results in HASH.json
         with open(json_file(new_hash), 'w') as file:
-            file.write(new_json)
+            file.write(new_json_str)
 
         # record results in MON.json
         with open(month_file, 'w') as file:
-            file.write(new_json)
+            file.write(new_json_str)
 
+
+def check_invalid(json:Dict[str, DivisionAvailability]):
+    for division_id in json:
+        division:DivisionAvailability = json[division_id]
+        dates = division["date_availability"]
+        if (len(dates) == 0):
+            return "Missing Dates: {}".format(division_id)
+
+    return False
 
 def run_check():
     now = datetime.now()
