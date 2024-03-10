@@ -3,18 +3,18 @@ import hashlib
 import json
 from datetime import datetime
 import time
-from typing import Dict, TypedDict
+# from typing import Dict, TypedDict
 import os
 import notify
 import random
 
-class Availability(TypedDict):
-    total: int
-    remaining: int
-
-class DivisionAvailability(TypedDict):
-    division_id: str
-    date_availability: Dict[str, Availability]
+# class Availability(TypedDict):
+#     total: int
+#     remaining: int
+#
+# class DivisionAvailability(TypedDict):
+#     division_id: str
+#     date_availability: Dict[str, Availability]
 
 
 def fetch(url):
@@ -29,7 +29,7 @@ def fetch(url):
     return response.text
 
 
-def fetch_availability(month) -> Dict[str, DivisionAvailability]:
+def fetch_availability(month): # -> Dict[str, DivisionAvailability]:
     url = month_availability(month)
     res = fetch(url)
     data = json.loads(res)
@@ -77,9 +77,9 @@ def run_check_month(month):
             file.write(new_json_str)
 
 
-def check_invalid(json:Dict[str, DivisionAvailability]):
+def check_invalid(json): # :Dict[str, DivisionAvailability]):
     for division_id in json:
-        division:DivisionAvailability = json[division_id]
+        division = json[division_id]
         dates = division["date_availability"]
         if (len(dates) == 0):
             return "Missing Dates: {}".format(division_id)
