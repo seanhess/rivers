@@ -63,6 +63,7 @@ def run_check_month(month):
 
     if invalid:
         print("Invalid Response: {} {}".format(month, invalid))
+        return
 
     if (old_hash != new_hash):
         print("DIFF", month, "old={}".format(old_hash), "new={}".format(new_hash))
