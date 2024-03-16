@@ -29,22 +29,22 @@ def fetch(url):
     return response.text
 
 
-def fetch_availability(month): # -> Dict[str, DivisionAvailability]:
-    url = month_availability(month)
+def fetch_availability(permit, month): # -> Dict[str, DivisionAvailability]:
+    url = month_availability(permit, month)
     res = fetch(url)
     data = json.loads(res)
     return data["payload"]["availability"]
 
-def month_availability(month):
+def month_availability(permit, month):
     date = month_date(month)
-    return "https://www.recreation.gov/api/permits/250014/availability/month?start_date={}T00:00:00.000Z&commercial_acct=false&is_lottery=false".format(date)
+    return "https://www.recreation.gov/api/permits/{}/availability/month?start_date={}T00:00:00.000Z&commercial_acct=false&is_lottery=false".format(permit, date)
 
 def hash(content:str) -> str:
     """Calculate MD5 hash of the given content."""
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
-def run_check_month(month):
-    month_file = json_file(month)
+def run_check_month(permit, month):
+    month_file = json_file("{}-{}".format(permit, month))
     old_json_str = ""
 
     # Check if the hash file exists to compare with the previous hash
@@ -52,7 +52,7 @@ def run_check_month(month):
         with open(month_file, 'r') as file:
             old_json_str = file.read()
 
-    new_json = fetch_availability(month)
+    new_json = fetch_availability(permit, month)
     new_json_str = json.dumps(new_json)
 
 
@@ -66,8 +66,8 @@ def run_check_month(month):
         return
 
     if (old_hash != new_hash):
-        print("DIFF", month, "old={}".format(old_hash), "new={}".format(new_hash))
-        notify_user(month)
+        print("DIFF","permit={}".format(permit), month, "old={}".format(old_hash), "new={}".format(new_hash))
+        notify_user(permit, month)
 
         # record results in HASH.json
         with open(json_file(new_hash), 'w') as file:
@@ -90,11 +90,15 @@ def check_invalid(json): # :Dict[str, DivisionAvailability]):
 def run_check():
     now = datetime.now()
     print("RUN", now)
-    for month in months():
-        run_check_month(month)
+    for permit in permits():
+        for month in months():
+            run_check_month(permit, month)
 
 def months():
-    return ["may", "jun", "jul", "aug", "sep"]
+    return ["may", "jun", "jul", "aug", "sep", "oct"]
+
+def permits():
+    return ["250014", "233393"]
 
 
 def month_date(m):
@@ -108,13 +112,15 @@ def month_date(m):
         return "2024-08-01"
     elif m == "sep":
         return "2024-09-01"
+    elif m == "oct":
+        return "2024-10-01"
 
 def json_file(m):
     return "data/{}.json".format(m)
 
 
-def notify_user(month):
-    url = "https://www.recreation.gov/permits/250014/registration/detailed-availability?date={}".format(month_date(month))
+def notify_user(permit, month):
+    url = "https://www.recreation.gov/permits/{}/registration/detailed-availability?date={}".format(permit, month_date(month))
     notify.notify_user_via_email(month, url)
 
 def main():
