@@ -88,11 +88,15 @@ def check_invalid(json): # :Dict[str, DivisionAvailability]):
     return False
 
 def run_check():
+    last = None
     now = datetime.now()
     print("RUN", now)
     for permit in permits():
         for month in months():
             run_check_month(permit, month)
+            if last and now.day != last.day:
+                notify.email_user_alive(now.day)
+            last = now
 
 def months():
     return ["may", "jun", "jul", "aug", "sep", "oct"]

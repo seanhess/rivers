@@ -34,5 +34,27 @@ def notify_user_via_email(month, url):
     print("Notification email sent to {}".format(email_send_to))
 
 
+def email_user_alive(date):
+    """Notify the user that the server is still on"""
+    # Set up the email server and login
+    server = smtplib.SMTP(smtp_server, smtp_port)
+    server.starttls()  # Secure the connection
+    server.login(email_address, email_password)
+    
+    # Create the email
+    msg = MIMEMultipart()
+    msg['From'] = email_address
+    msg['To'] = email_send_to
+    msg['Subject'] = "River Bot Heartbeat"
+    
+    body = "I'm aliiiiive. {}".format(date)
+    msg.attach(MIMEText(body, 'plain'))
+    
+    # Send the email and close the server connection
+    server.send_message(msg)
+    server.quit()
+
+    print("Heartbeat email sent to {}".format(email_send_to))
+
 # if __name__ == "__main__":
 #     notify_user_via_email("shess@nso.edu", "jun", "2024-06-01")
